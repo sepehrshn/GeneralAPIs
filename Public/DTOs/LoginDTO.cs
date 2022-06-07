@@ -8,8 +8,9 @@ namespace Public.DTOs
         {
 
         }
-        [Required, MaxLength(11),MinLength(11)]
-        public string PhonNumber { get; set; }
+        [Required]
+        public string UserName { get; set; }
+        [Required]
         public string PassWord { get; set; }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using Public.Services;
 using Public.Contaract;
+using Public.DTOs;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace Public.Controllers
 {
@@ -9,18 +11,19 @@ namespace Public.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IJWTService jWTService;
-        public AuthController(IJWTService jWTService)
+        private readonly IAuth auth;
+        public AuthController(IAuth _auth)
         {
-            this.jWTService = jWTService;
+            auth = _auth;
         }
-    
+
         // GET: api/<AuthController>
         [HttpGet]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
         }
+
 
         // GET api/<AuthController>/5
         [HttpGet("{id}")]
@@ -29,22 +32,23 @@ namespace Public.Controllers
             return "value";
         }
 
-        // POST api/<AuthController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromBody] LoginDTO loginDTO)
         {
-        }
-
-        // PUT api/<AuthController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<AuthController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                string jwt = auth.Login(loginDTO);
+                if (string.IsNullOrEmpty(jwt)) 
+                {
+                    return BadRequest(new { message = "Invalid Credentials" });
+                }
+                Response.Cookies.Append("AUTHJWT", jwt, new CookieOptions() { HttpOnly = true, Path = "/", Expires = DateTime.Now.AddDays(30) });
+                return Ok(new {message = "success"});
+            }
         }
     }
 }
